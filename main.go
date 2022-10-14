@@ -12,9 +12,34 @@ func main() {
 	// 現在時刻をUNIX時間にしたものを種とする
 	rand.Seed(time.Now().Unix())
 
-	// TODO: 変数iを1から11まで増やしていき処理を10回繰り返す
-	for i := 1; i <= 11; i++ {
+	var n int // ガチャを繰り返す回数
+	fmt.Println("1: 単発ガチャ 2: 11連ガチャ")
 
+	// TODO: LOOPというラベルのついた無限ループを作る
+LOOP:
+	for {
+
+		fmt.Print(">")
+		var kind int
+		// TODO: 変数kindに入力した値を入れる
+		fmt.Scanln(&kind)
+
+		switch kind {
+		case 1: // 単発ガチャ
+			n = 1
+			break LOOP
+		case 2: // 11連ガチャ
+			// TODO: 変数nに11を入れる
+			n = 11
+			break LOOP
+		default:
+			fmt.Println("もう一度入力してください")
+		}
+	}
+
+	for i := 1; i <= n; i++ {
+
+		// 0から99までの間で乱数を生成する
 		num := rand.Intn(100)
 
 		fmt.Printf("%v回目", i)
@@ -33,4 +58,5 @@ func main() {
 			fmt.Println("XR")
 		}
 	}
+
 }
