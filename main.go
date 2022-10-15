@@ -12,51 +12,27 @@ func main() {
 	// 現在時刻をUNIX時間にしたものを種とする
 	rand.Seed(time.Now().Unix())
 
-	var n int // ガチャを繰り返す回数
-	fmt.Println("1: 単発ガチャ 2: 11連ガチャ")
+	var result [11]string
 
-	// TODO: LOOPというラベルのついた無限ループを作る
-LOOP:
-	for {
-
-		fmt.Print(">")
-		var kind int
-		// TODO: 変数kindに入力した値を入れる
-		fmt.Scanln(&kind)
-
-		switch kind {
-		case 1: // 単発ガチャ
-			n = 1
-			break LOOP
-		case 2: // 11連ガチャ
-			// TODO: 変数nに11を入れる
-			n = 11
-			break LOOP
-		default:
-			fmt.Println("もう一度入力してください")
-		}
-	}
-
-	for i := 1; i <= n; i++ {
+	for i := 0; i < len(result); i++ {
 
 		// 0から99までの間で乱数を生成する
 		num := rand.Intn(100)
 
-		fmt.Printf("%v回目", i)
-
+		// 変数numが0〜79のときは"ノーマル"、
 		// 80〜94のときは"R"、95〜98のときは"SR"、
 		// それ以外のときは"XR"と表示する
-
 		switch {
 		case num < 80:
-			fmt.Println("N")
-		case num >= 80 && num < 95:
-			fmt.Println("R")
-		case num >= 95 && num < 99:
-			fmt.Println("SR")
+			result[i] = "ノーマル"
+		case num < 95:
+			result[i] = "R"
+		case num < 99:
+			result[i] = "SR"
 		default:
-			fmt.Println("XR")
+			result[i] = "XR"
 		}
 	}
 
+	fmt.Println(result)
 }
