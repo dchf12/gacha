@@ -12,7 +12,23 @@ func main() {
 	// 現在時刻をUNIX時間にしたものを種とする
 	rand.Seed(time.Now().Unix())
 
-	var result [11]string
+	// ガチャを引く回数
+	var n int
+
+	for {
+		fmt.Print("何回引きますか？>")
+		fmt.Scanln(&n)
+
+		// TODO: nが0より大きい場合はforをbreakする
+		if n > 0 {
+			break
+		}
+		fmt.Println("もう一度入力してください")
+	}
+
+	// TODO: 長さnの文字列型のスライスを変数resultとして定義する
+	var result []string
+	result = make([]string, n)
 
 	for i := 0; i < len(result); i++ {
 
