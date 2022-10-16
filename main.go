@@ -6,13 +6,34 @@ import (
 	"time"
 )
 
+type rarity string
+
+const (
+	rarityN  rarity = "ノーマル"
+	rarityR  rarity = "R"
+	raritySR rarity = "SR"
+	rarityXR rarity = "XR"
+)
+
+type card struct {
+	rarity rarity // レア度
+	name   string // 名前
+}
+
 func main() {
 	// 乱数の種を設定する
 	// 現在時刻をUNIX時間にしたものを種とする
 	rand.Seed(time.Now().Unix())
+
+	// 関数inputNを呼び出しその結果を変数nに代入
 	n := inputN()
 
-	drawN(n)
+	// TODO: 関数drawNの引数に変数nを指定して呼び出す
+	// 結果を変数resultsとsummaryに代入する
+	results, summary := drawN(n)
+
+	fmt.Println(results)
+	fmt.Println(summary)
 }
 
 func inputN() int {
@@ -28,28 +49,33 @@ func inputN() int {
 	return n
 }
 
-func drawN(n int) {
-	for n > 0 {
-		draw()
-		n--
+func drawN(n int) ([]card, map[rarity]int) {
+	results := make([]card, n)
+	summary := make(map[rarity]int)
+	for i := 0; i < n; i++ {
+		// TODO: 関数drawが返す値をresultsのi番目に代入する
+		results[i] = draw()
+
+		summary[results[i].rarity]++
 	}
+
+	// 変数resultsとsummaryの値を戻り値として返す
+	return results, summary
 }
 
-func draw() {
-	// 0から99までの間で乱数を生成する
+func draw() card {
 	num := rand.Intn(100)
 
-	// 変数numが0〜79のときは"ノーマル"、
-	// 80〜94のときは"R"、95〜98のときは"SR"、
-	// それ以外のときは"XR"と表示する
 	switch {
 	case num < 80:
-		fmt.Println("ノーマル")
+		return card{rarity: rarityN, name: "スライム"}
 	case num < 95:
-		fmt.Println("R")
+		return card{rarity: rarityR, name: "オーク"}
 	case num < 99:
-		fmt.Println("SR")
+		// TODO: rarityフィールドがraritySRで
+		// nameフィールドが"ドラゴン"のcard型の値を返す
+		return card{rarity: raritySR, name: "ドラゴン"}
 	default:
-		fmt.Println("XR")
+		return card{rarity: rarityXR, name: "イフリート"}
 	}
 }
