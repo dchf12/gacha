@@ -12,9 +12,7 @@ func main() {
 	rand.Seed(time.Now().Unix())
 	n := inputN()
 
-	for i := 1; i <= n; i++ {
-		draw()
-	}
+	drawN(n)
 }
 
 func inputN() int {
@@ -28,6 +26,13 @@ func inputN() int {
 		fmt.Println("もう一度入力してください")
 	}
 	return n
+}
+
+func drawN(n int) {
+	for n > 0 {
+		draw()
+		n--
+	}
 }
 
 func draw() {
