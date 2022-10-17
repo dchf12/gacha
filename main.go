@@ -2,34 +2,32 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
-	"time"
+
+	"github.com/dchf12/gacha/gacha"
 )
 
 func main() {
-	// 乱数の種を設定する
-	// 現在時刻をUNIX時間にしたものを種とする
-	rand.Seed(time.Now().Unix())
+	// TODO: ガチャ券10枚、コイン100枚を持ったプレイヤーを作る
+	p := gacha.NewPlayer(10, 100)
 
-	p := player{tickets: 10, coin: 100}
-
-	n := inputN(&p)
-	results, summary := drawN(&p, n)
+	n := inputN(p)
+	// TODO: gacha.DrawN関数を呼び、変数resultsとsummaryに結果を代入する
+	results, summary := gacha.DrawN(p, n)
 
 	fmt.Println(results)
 	fmt.Println(summary)
 }
 
-func inputN(p *player) int {
+// TODO: 引数の型をgacha.Playerのポインタにする
+func inputN(p *gacha.Player) int {
 
-	max := p.drawableNum()
+	max := p.DrawableNum()
 	fmt.Printf("ガチャを引く回数を入力してください（最大:%d回）\n", max)
 
 	var n int
 	for {
 		fmt.Print("ガチャを引く回数>")
 		fmt.Scanln(&n)
-		// TODO: nが0より大きくmax以下である場合はbreak
 		if n > 0 && n <= max {
 			break
 		}
