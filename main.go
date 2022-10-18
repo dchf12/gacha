@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/dchf12/gacha/gacha"
 )
@@ -35,4 +36,46 @@ func inputN(p *gacha.Player) int {
 	}
 
 	return n
+}
+
+func saveResults(results []*gacha.Card) {
+	// TODO: results.txtというファイルを作成する
+	f, err := os.Create("results.txt")
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+
+	for _, result := range results {
+		// TODO: fmt.Fprintln関数を使ってresultをファイルに出力する
+		fmt.Println(f, result)
+	}
+}
+
+func saveSummary(summary map[gacha.Rarity]int) {
+	f, err := os.Create("summary.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	defer func() {
+		// TODO: ファイルを閉じる
+		// エラー発生した場合はfmt.Println関数で出力する
+		if err := f.Close(); err != nil {
+			fmt.Println(err)
+		}
+
+	}()
+
+	for rarity, count := range summary {
+		fmt.Fprintf(f, "%s %d\n", rarity.String(), count)
+	}
 }
