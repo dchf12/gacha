@@ -8,18 +8,15 @@ import (
 )
 
 func main() {
-	// TODO: ガチャ券10枚、コイン100枚を持ったプレイヤーを作る
 	p := gacha.NewPlayer(10, 100)
 
 	n := inputN(p)
-	// TODO: gacha.DrawN関数を呼び、変数resultsとsummaryに結果を代入する
 	results, summary := gacha.DrawN(p, n)
 
 	fmt.Println(results)
 	fmt.Println(summary)
 }
 
-// TODO: 引数の型をgacha.Playerのポインタにする
 func inputN(p *gacha.Player) int {
 
 	max := p.DrawableNum()
@@ -39,7 +36,6 @@ func inputN(p *gacha.Player) int {
 }
 
 func saveResults(results []*gacha.Card) {
-	// TODO: results.txtというファイルを作成する
 	f, err := os.Create("results.txt")
 
 	if err != nil {
@@ -54,8 +50,7 @@ func saveResults(results []*gacha.Card) {
 	}()
 
 	for _, result := range results {
-		// TODO: fmt.Fprintln関数を使ってresultをファイルに出力する
-		fmt.Println(f, result)
+		fmt.Fprintln(f, result)
 	}
 }
 
@@ -67,8 +62,6 @@ func saveSummary(summary map[gacha.Rarity]int) {
 	}
 
 	defer func() {
-		// TODO: ファイルを閉じる
-		// エラー発生した場合はfmt.Println関数で出力する
 		if err := f.Close(); err != nil {
 			fmt.Println(err)
 		}
