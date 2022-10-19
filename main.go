@@ -3,18 +3,36 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/dchf12/gacha/gacha"
 )
 
 func main() {
-	p := gacha.NewPlayer(10, 100)
+	tickets := initialTickets()
+	p := gacha.NewPlayer(tickets, 100)
 
 	n := inputN(p)
 	results, summary := gacha.DrawN(p, n)
 
 	saveResults(results)
 	saveSummary(summary)
+}
+
+func initialTickets() int {
+	if len(os.Args) == 1 {
+		fmt.Fprintln(os.Stderr, "ガチャチケットの枚数を入力してください")
+		os.Exit(1)
+	}
+
+	num, err := strconv.Atoi(os.Args[1])
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	return num
 }
 
 func inputN(p *gacha.Player) int {
