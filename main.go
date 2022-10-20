@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -14,39 +15,55 @@ var (
 )
 
 func init() {
-	// TODO: flagCoinに"coin"という名前のフラグを設定する
-	// デフォルト値は0で説明は"コインの初期枚数"
 	flag.IntVar(&flagCoin, "coin", 0, "コインの初期枚数")
 }
 
 func main() {
-	// TODO: フラグをパースする
-	flag.Parse()
-
-	tickets := initialTickets()
-	p := gacha.NewPlayer(tickets, flagCoin)
-
-	n := inputN(p)
-	results, summary := gacha.DrawN(p, n)
-
-	saveResults(results)
-	saveSummary(summary)
-}
-
-func initialTickets() int {
-	if flag.NArg() == 0 {
-		fmt.Fprintln(os.Stderr, "ガチャチケットの枚数を入力してください")
-		os.Exit(1)
-	}
-
-	// TODO: フラグを除いて1つめのプログラム引数を取得してint型に変換する
-	num, err := strconv.Atoi(flag.Arg(0))
-	if err != nil {
+	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
 
-	return num
+func run() error {
+	flag.Parse()
+
+	tickets, err := initialTickets()
+	if err != nil {
+		return err
+	}
+
+	p := gacha.NewPlayer(tickets, flagCoin)
+
+	n := inputN(p)
+	results, summary, err := gacha.DrawN(p, n)
+
+	if err != nil {
+		return err
+	}
+
+	if err := saveResults(results); err != nil {
+		return err
+	}
+
+	if err := saveSummary(summary); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func initialTickets() (int, error) {
+	if flag.NArg() == 0 {
+		return 0, errors.New("ガチャチケットの枚数を入力してください")
+	}
+
+	num, err := strconv.Atoi(flag.Arg(0))
+	if err != nil {
+		return 0, err
+	}
+
+	return num, nil
 }
 
 func inputN(p *gacha.Player) int {
@@ -67,38 +84,40 @@ func inputN(p *gacha.Player) int {
 	return n
 }
 
-func saveResults(results []*gacha.Card) {
+func saveResults(results []*gacha.Card) (rerr error) {
 	f, err := os.Create("results.txt")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return err
 	}
 
 	defer func() {
-		if err := f.Close(); err != nil {
-			fmt.Fprintln(os.Stderr, err)
+		if err := f.Close(); err != nil && rerr == nil {
+			rerr = err
 		}
 	}()
 
 	for _, result := range results {
 		fmt.Fprintln(f, result)
 	}
+
+	return nil
 }
 
-func saveSummary(summary map[gacha.Rarity]int) {
+func saveSummary(summary map[gacha.Rarity]int) (rerr error) {
 	f, err := os.Create("summary.txt")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return err
 	}
 
 	defer func() {
-		if err := f.Close(); err != nil {
-			fmt.Fprintln(os.Stderr, err)
+		if err := f.Close(); err != nil && rerr == nil {
+			rerr = err
 		}
 	}()
 
 	for rarity, count := range summary {
 		fmt.Fprintf(f, "%s %d\n", rarity.String(), count)
 	}
+
+	return nil
 }
