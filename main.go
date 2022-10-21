@@ -32,21 +32,27 @@ func run() error {
 	if err != nil {
 		return err
 	}
-
 	p := gacha.NewPlayer(tickets, flagCoin)
+	play := gacha.NewPlay(p)
 
 	n := inputN(p)
-	results, summary, err := gacha.DrawN(p, n)
+	for play.Draw() {
+		if n <= 0 {
+			break
+		}
+		fmt.Println(play.Result())
+		n--
+	}
 
-	if err != nil {
+	if err := play.Err(); err != nil {
+		return fmt.Errorf("ガチャを%d回引く:%w", n, err)
+	}
+
+	if err := saveResults(play.Results()); err != nil {
 		return err
 	}
 
-	if err := saveResults(results); err != nil {
-		return err
-	}
-
-	if err := saveSummary(summary); err != nil {
+	if err := saveSummary(play.Summary()); err != nil {
 		return err
 	}
 
@@ -60,7 +66,7 @@ func initialTickets() (int, error) {
 
 	num, err := strconv.Atoi(flag.Arg(0))
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("ガチャチケット数のパース(%q):%w", flag.Arg(0), err)
 	}
 
 	return num, nil
@@ -87,15 +93,12 @@ func inputN(p *gacha.Player) int {
 func saveResults(results []*gacha.Card) (rerr error) {
 	f, err := os.Create("results.txt")
 	if err != nil {
-		// TODO: エラーを"result.txtの作成:"という文字列を付加してラップして返す
-		return fmt.Errorf("%w", errors.New("result.txtの作成"))
+		return fmt.Errorf("result.txtの作成:%w", err)
 	}
 
 	defer func() {
 		if err := f.Close(); err != nil && rerr == nil {
-			// TODO: 関数saveResultsの戻り値になるようにエラーをrerrに代入する
-			// エラーは"result.txtのクローズ:"という文字列を付加してラップして返す
-			rerr = fmt.Errorf("%w", errors.New("result.txtのクローズ"))
+			rerr = fmt.Errorf("result.txtのクローズ:%w", err)
 		}
 	}()
 
@@ -109,12 +112,12 @@ func saveResults(results []*gacha.Card) (rerr error) {
 func saveSummary(summary map[gacha.Rarity]int) (rerr error) {
 	f, err := os.Create("summary.txt")
 	if err != nil {
-		return err
+		return fmt.Errorf("summary.txtの作成:%w", err)
 	}
 
 	defer func() {
 		if err := f.Close(); err != nil && rerr == nil {
-			rerr = err
+			rerr = fmt.Errorf("summary.txtのクローズ:%w", err)
 		}
 	}()
 
