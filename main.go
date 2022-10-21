@@ -5,17 +5,27 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 
 	"github.com/dchf12/gacha/gacha"
 )
 
 var (
-	flagCoin int
+	flagCoin    int
+	flagResults string
+	flagSummary string
+)
+
+var (
+	regexpResults = regexp.MustCompile(`^results.*\.txt$`)
+	regexpSummary = regexp.MustCompile(`^summary.*\.txt$`)
 )
 
 func init() {
 	flag.IntVar(&flagCoin, "coin", 0, "コインの初期枚数")
+	flag.StringVar(&flagResults, "results", "results.txt", "結果ファイルの名前")
+	flag.StringVar(&flagSummary, "summary", "summary.txt", "集計ファイルの名前")
 }
 
 func main() {
@@ -27,6 +37,14 @@ func main() {
 
 func run() error {
 	flag.Parse()
+
+	if !regexpResults.MatchString(flagResults) {
+		return fmt.Errorf("結果ファイル名が不正(%s)", flagResults)
+	}
+
+	if !regexpSummary.MatchString(flagSummary) {
+		return fmt.Errorf("集計ファイル名が不正(%s)", flagSummary)
+	}
 
 	tickets, err := initialTickets()
 	if err != nil {
@@ -91,14 +109,14 @@ func inputN(p *gacha.Player) int {
 }
 
 func saveResults(results []*gacha.Card) (rerr error) {
-	f, err := os.Create("results.txt")
+	f, err := os.Create(flagResults)
 	if err != nil {
-		return fmt.Errorf("result.txtの作成:%w", err)
+		return fmt.Errorf("%sの作成:%w", flagResults, err)
 	}
 
 	defer func() {
 		if err := f.Close(); err != nil && rerr == nil {
-			rerr = fmt.Errorf("result.txtのクローズ:%w", err)
+			rerr = fmt.Errorf("%sのクローズ:%w", flagResults, err)
 		}
 	}()
 
@@ -110,14 +128,14 @@ func saveResults(results []*gacha.Card) (rerr error) {
 }
 
 func saveSummary(summary map[gacha.Rarity]int) (rerr error) {
-	f, err := os.Create("summary.txt")
+	f, err := os.Create(flagSummary)
 	if err != nil {
-		return fmt.Errorf("summary.txtの作成:%w", err)
+		return fmt.Errorf("%sの作成:%w", flagSummary, err)
 	}
 
 	defer func() {
 		if err := f.Close(); err != nil && rerr == nil {
-			rerr = fmt.Errorf("summary.txtのクローズ:%w", err)
+			rerr = fmt.Errorf("%sのクローズ:%w", flagSummary, err)
 		}
 	}()
 
