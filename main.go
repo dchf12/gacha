@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/dchf12/gacha/gacha"
+	"github.com/tenntenn/sqlite"
 )
 
 var tmpl = template.Must(template.New("index").Parse(`<!DOCTYPE html>
@@ -34,12 +36,29 @@ func main() {
 }
 
 func run() error {
+
+	db, err := sql.Open(sqlite.DriverName, "results.db")
+	if err != nil {
+		return fmt.Errorf("データベースのOpen:%w", err)
+	}
+
+	if err := createTable(db); err != nil {
+		return err
+	}
+
 	p := gacha.NewPlayer(10, 100)
 	// ※本当はハンドラ間で競合が起きるのでNG
 	play := gacha.NewPlay(p)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if err := tmpl.Execute(w, play.Results()); err != nil {
+		results, err := getResults(db, 100)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := tmpl.Execute(w, results); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
@@ -55,6 +74,12 @@ func run() error {
 			if !play.Draw() {
 				break
 			}
+
+			if err := saveResult(db, play.Result()); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+
+			}
 		}
 
 		if err := play.Err(); err != nil {
@@ -66,4 +91,51 @@ func run() error {
 	})
 
 	return http.ListenAndServe(":8080", nil)
+}
+
+func createTable(db *sql.DB) error {
+	const sqlStr = `CREATE TABLE IF NOT EXISTS results(
+		id        INTEGER PRIMARY KEY,
+		rarity	  TEXT NOT NULL,
+		name      TEXT NOT NULL
+	);`
+
+	_, err := db.Exec(sqlStr)
+	if err != nil {
+		return fmt.Errorf("テーブル作成:%w", err)
+	}
+
+	return nil
+}
+
+func saveResult(db *sql.DB, card *gacha.Card) error {
+	const sqlStr = `INSERT INTO results(rarity, name) VALUES (?,?);`
+	if _, err := db.Exec(sqlStr, card.Rarity, card.Name); err != nil {
+		return err
+	}
+	return nil
+}
+
+func getResults(db *sql.DB, limit int) ([]*gacha.Card, error) {
+	const sqlStr = `SELECT rarity, name FROM results LIMIT ?`
+	rows, err := db.Query(sqlStr, limit)
+	if err != nil {
+		return nil, fmt.Errorf("%qの実行:%w", sqlStr, err)
+	}
+	defer rows.Close()
+
+	var results []*gacha.Card
+	for rows.Next() {
+		var card gacha.Card
+		if err := rows.Scan(&card.Rarity, &card.Name); err != nil {
+			return nil, fmt.Errorf("Scan:%w", err)
+		}
+		results = append(results, &card)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("結果の取得:%w", err)
+	}
+
+	return results, nil
 }
