@@ -3,10 +3,11 @@ package gacha
 type Rarity string
 
 const (
-	RarityN  Rarity = "N"
-	RarityR  Rarity = "R"
-	RaritySR Rarity = "SR"
-	RarityXR Rarity = "XR"
+	RarityUnkown Rarity = ""
+	RarityN      Rarity = "N"
+	RarityR      Rarity = "R"
+	RaritySR     Rarity = "SR"
+	RarityXR     Rarity = "XR"
 )
 
 func (r Rarity) String() string {
@@ -14,8 +15,9 @@ func (r Rarity) String() string {
 }
 
 type Card struct {
-	Rarity Rarity // レア度
-	Name   string // 名前
+	ID     string `datastore:"-"`
+	Rarity Rarity `datastore:"rarity"`
+	Name   string `datastore:"name"`
 }
 
 func (c *Card) String() string {

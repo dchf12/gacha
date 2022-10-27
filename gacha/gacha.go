@@ -1,14 +1,7 @@
 package gacha
 
-import (
-	"fmt"
-	"io/ioutil"
-	"net/http"
-)
-
-const baseURL = "https://gohandson-gacha.uc.r.appspot.com/"
-
 type Play struct {
+	Client  Client
 	player  *Player
 	results []*Card
 	summary map[Rarity]int
@@ -20,6 +13,13 @@ func NewPlay(p *Player) *Play {
 		player:  p,
 		summary: make(map[Rarity]int),
 	}
+}
+
+func (p *Play) client() Client {
+	if p.Client != nil {
+		return p.Client
+	}
+	return defaultClient
 }
 
 func (p *Play) Results() []*Card {
@@ -59,35 +59,15 @@ func (p *Play) Draw() bool {
 	p.results = append(p.results, card)
 	p.summary[card.Rarity]++
 
-	return p.player.DrawableNum() > 0
+	return true
 }
 
 func (p *Play) draw() (*Card, error) {
-	q := "スライム:80,オーク:15,ドラゴン:4,イフリート:1"
-	req, err := http.NewRequest(http.MethodGet, baseURL+"?q="+q, nil)
-	if err != nil {
-		return nil, fmt.Errorf("リクエスト作成:%w", err)
+	dist := Distribution{
+		RarityN:  &Group{Ratio: 80, Cards: []*Card{&Card{ID: "n-1", Rarity: RarityN, Name: "スライム"}}},
+		RarityR:  &Group{Ratio: 15, Cards: []*Card{&Card{ID: "r-1", Rarity: RarityR, Name: "オーク"}}},
+		RaritySR: &Group{Ratio: 4, Cards: []*Card{&Card{ID: "sr-1", Rarity: RaritySR, Name: "ドラゴン"}}},
+		RarityXR: &Group{Ratio: 1, Cards: []*Card{&Card{ID: "xr-1", Rarity: RarityXR, Name: "イフリート"}}},
 	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("APIリクエスト:%w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Bodyの読み込み:%w", err)
-	}
-
-	result := string(body)
-	switch result {
-	case "スライム":
-		return &Card{Rarity: RarityN, Name: "スライム"}, nil
-	case "オーク":
-		return &Card{Rarity: RarityR, Name: "オーク"}, nil
-	case "ドラゴン":
-		return &Card{Rarity: RaritySR, Name: "ドラゴン"}, nil
-	default:
-		return &Card{Rarity: RarityXR, Name: "イフリート"}, nil
-	}
+	return p.client().Draw(dist)
 }
